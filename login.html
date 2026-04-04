@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Sistema de Gestión de Flotas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 450px;
+      padding: 40px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .login-header h1 {
+      font-size: 28px;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+
+    .login-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: #1a365d;
+      box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(26, 54, 93, 0.4);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: shake 0.3s ease-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .info-credenciales {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .info-credenciales h4 {
+      color: #1a365d;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .credencial-item {
+      padding: 8px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .credencial-item:last-child {
+      border-bottom: none;
+    }
+
+    .rol-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .rol-admin {
+      background: #1a365d;
+      color: white;
+    }
+
+    .rol-tecnico {
+      background: #dd6b20;
+      color: white;
+    }
+
+    .credencial-user {
+      font-family: monospace;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>🚚 Sistema de Gestión de Flotas</h1>
+      <p>Ingrese sus credenciales para acceder</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>📧 Usuario</label>
+        <input type="text" id="username" placeholder="usuario@ejemplo.com" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="password" placeholder="••••••">
+      </div>
+
+      <button type="submit" class="btn-login">Iniciar Sesión</button>
+      
+      <div class="error-message" id="errorMessage">
+        ❌ Usuario o contraseña incorrectos
+      </div>
+      <div class="success-message" id="successMessage">
+        ✅ ¡Bienvenido! Redirigiendo...
+      </div>
+    </form>
+
+    <div class="info-credenciales">
+      <h4>📝 Credenciales de acceso</h4>
+      <div class="credencial-item">
+        <span>👑 <strong>Administrador</strong></span>
+        <span class="rol-badge rol-admin">Admin</span>
+        <span class="credencial-user">admin@flota.com / admin123</span>
+      </div>
+      <div class="credencial-item">
+        <span>🔧 <strong>Técnico de Control</strong></span>
+        <span class="rol-badge rol-tecnico">Técnico</span>
+        <span class="credencial-user">tecnico@flota.com / tec123</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Credenciales válidas con roles
+    const VALID_CREDENTIALS = [
+      {
+        username: 'admin@flota.com',
+        password: 'admin123',
+        role: 'admin',
+        name: 'Administrador',
+        permissions: ['full_access', 'manage_users', 'view_reports']
+      },
+      {
+        username: 'tecnico@flota.com',
+        password: 'tec123',
+        role: 'tecnico',
+        name: 'Técnico de Control',
+        permissions: ['view_vehicles', 'view_alerts', 'basic_reports']
+      }
+    ];
+
+    // Función para mostrar error
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const successDiv = document.getElementById('successMessage');
+      errorDiv.textContent = `❌ ${message}`;
+      errorDiv.classList.add('show');
+      successDiv.classList.remove('show');
+      
+      // Ocultar después de 3 segundos
+      setTimeout(() => {
+        errorDiv.classList.remove('show');
+      }, 3000);
+    }
+
+    // Función para mostrar éxito
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = `✅ ${message}`;
+      successDiv.classList.add('show');
+      
+      setTimeout(() => {
+        successDiv.classList.remove('show');
+      }, 2000);
+    }
+
+    // Función de login
+    function handleLogin(event) {
+      event.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      
+      // Validar campos vacíos
+      if (!username || !password) {
+        showError('Por favor complete todos los campos');
+        return;
+      }
+      
+      // Buscar credenciales
+      const user = VALID_CREDENTIALS.find(
+        cred => cred.username === username && cred.password === password
+      );
+      
+      if (user) {
+        // Mostrar mensaje de bienvenida
+        showSuccess(`Bienvenido ${user.name}`);
+        
+        // Guardar sesión con datos del usuario
+        sessionStorage.setItem('isLoggedIn', 'true');
+        sessionStorage.setItem('username', user.username);
+        sessionStorage.setItem('userRole', user.role);
+        sessionStorage.setItem('userName', user.name);
+        sessionStorage.setItem('loginTime', new Date().toISOString());
+        sessionStorage.setItem('userPermissions', JSON.stringify(user.permissions));
+        
+        // Redirigir después de 1 segundo
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1000);
+      } else {
+        showError('Usuario o contraseña incorrectos');
+        
+        // Limpiar campos
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+      }
+    }
+    
+    // Verificar si ya está logueado
+    function checkAlreadyLoggedIn() {
+      if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        window.location.href = 'index.html';
+      }
+    }
+    
+    // Event listeners
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    
+    // Permitir Enter en los campos
+    document.getElementById('username').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('password').focus();
+      }
+    });
+    
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLogin(e);
+      }
+    });
+    
+    // Verificar sesión al cargar
+    checkAlreadyLoggedIn();
+  </script>
+</body>
+</html>

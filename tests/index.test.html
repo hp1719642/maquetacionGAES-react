@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pruebas - script.js</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 16px; }
+    h1 { font-size: 1.2rem; margin-bottom: 10px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 6px 0; }
+    .pass { color: #38a169; }
+    .fail { color: #e53e3e; }
+    code { background: #f7fafc; padding: 2px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Pruebas básicas de JS</h1>
+  <ul id="results"></ul>
+
+  <script src="../JS/script.js"></script>
+  <script>
+    const results = document.getElementById('results');
+
+    function report(name, ok, err) {
+      const li = document.createElement('li');
+      li.className = ok ? 'pass' : 'fail';
+      li.textContent = (ok ? '✓ ' : '✗ ') + name + (ok ? '' : ' - ' + (err && (err.message || err)));
+      results.appendChild(li);
+    }
+
+    function test(name, fn) {
+      try {
+        const r = fn();
+        if (r && typeof r.then === 'function') {
+          r.then(() => report(name, true))
+           .catch(e => report(name, false, e));
+        } else {
+          report(name, true);
+        }
+      } catch (e) {
+        report(name, false, e);
+      }
+    }
+
+    // Tests
+    test('updateAlertBadge no falla si no existe .alert-badge', function () {
+      updateAlertBadge();
+    });
+
+    test('createVehiclePopup devuelve HTML con ID y estado mapeado', function () {
+      const html = createVehiclePopup({
+        id: 'VV-999',
+        status: 'alert',
+        driver: 'Test',
+        route: 'Ruta X',
+        lastUpdate: 'ahora'
+      });
+      if (!/VV-999/.test(html)) throw new Error('No contiene ID');
+      if (!/Emergencia/.test(html)) throw new Error('No contiene el estado mapeado');
+    });
+
+    test('showNotification agrega y luego elimina el elemento', function () {
+      const before = document.body.childElementCount;
+      showNotification('mensaje de prueba', 'success');
+      const after = document.body.childElementCount;
+      if (!(after > before)) throw new Error('No se agregó notificación');
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const now = document.body.childElementCount;
+          if (now >= after) reject('No se eliminó la notificación');
+          else resolve();
+        }, 3200);
+      });
+    });
+
+    test('refreshMap retorna temprano si no existe el botón', function () {
+      refreshMap();
+    });
+  </script>
+</body>
+</html>
