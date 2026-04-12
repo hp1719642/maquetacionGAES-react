@@ -1,0 +1,81 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@flota.com",
+      "password": "admin123",
+      "name": "Administrador del Sistema",
+      "role": "admin"
+    },
+    {
+      "id": 2,
+      "email": "tecnico@flota.com",
+      "password": "tec123",
+      "name": "Carlos Técnico",
+      "role": "tecnico"
+    },
+    {
+      "id": 3,
+      "email": "supervisor@flota.com",
+      "password": "sup123",
+      "name": "Laura Supervisora",
+      "role": "supervisor"
+    },
+    {
+      "id": 1775945199818,
+      "email": "nuevo@tecnico.com",
+      "password": "123456",
+      "name": "Nuevo Técnico",
+      "role": "tecnico"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": 1,
+      "plate": "VV-001",
+      "driver": "Carlos Mendoza",
+      "status": "normal",
+      "route": "Ruta Norte",
+      "latitude": 4.711,
+      "longitude": -74.0721
+    },
+    {
+      "id": 2,
+      "plate": "VV-002",
+      "driver": "Ana Rodríguez",
+      "status": "warning",
+      "route": "Ruta Sur",
+      "latitude": 4.7,
+      "longitude": -74.08
+    },
+    {
+      "id": 3,
+      "plate": "VV-003",
+      "driver": "Luis Pérez",
+      "status": "alert",
+      "route": "Ruta Centro",
+      "latitude": 4.72,
+      "longitude": -74.06
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "vehicleId": 3,
+      "title": "Botón de Pánico Activado",
+      "description": "Zona Centro - Av. Principal #123",
+      "priority": "high",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "resolved": false
+    },
+    {
+      "id": 2,
+      "vehicleId": 2,
+      "title": "Desvío de Ruta Detectado",
+      "description": "Vehículo fuera de ruta programada",
+      "priority": "medium",
+      "timestamp": "2024-01-15T09:15:00Z",
+      "resolved": false
+    }
+  ]
+}
