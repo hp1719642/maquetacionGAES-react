@@ -1,95 +1,144 @@
 // src/services/api.js
-// Este archivo es el "traductor" entre React y el API
+const API_URL = 'http://localhost:5000/api';
 
-const API_URL = 'http://localhost:4000'
+class ApiService {
+  constructor() {
+    this.token = localStorage.getItem('token');
+  }
 
-// Servicio de autenticación (para login y registro)
-export const authAPI = {
-  // Función para iniciar sesión
-  login: async (email, password) => {
+  setToken(token) {
+    this.token = token;
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+  }
+
+  getHeaders() {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    
+    return headers;
+  }
+
+  async request(endpoint, options = {}) {
     try {
-      // Enviamos los datos al API
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      })
-
-      // Obtenemos la respuesta del API
-      const data = await response.json()
-
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: this.getHeaders(),
+      });
+      
       if (!response.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión')
+        const error = await response.json();
+        throw new Error(error.message || 'Error en la petición');
       }
-
-      // Guardamos el token en localStorage (como una llave de acceso)
-      localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('user', JSON.stringify(data.user))
-
-      return { success: true, user: data.user }
+      
+      return await response.json();
     } catch (error) {
-      return { success: false, error: error.message }
+      console.error('API Error:', error);
+      throw error;
     }
-  },
+  }
 
-  // Función para cerrar sesión
-  logout: () => {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('user')
-  },
-
-  // Función para obtener el usuario actual
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
-      return JSON.parse(userStr)
+  // Autenticación
+  async login(email, password) {
+    const data = await this.request('/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    
+    if (data.token) {
+      this.setToken(data.token);
     }
-    return null
-  },
+    
+    return data;
+  }
 
-  // Función para verificar si está logueado
-  isAuthenticated: () => {
-    return localStorage.getItem('accessToken') !== null
+  async register(userData) {
+    const data = await this.request('/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    
+    if (data.token) {
+      this.setToken(data.token);
+    }
+    
+    return data;
+  }
+
+  logout() {
+    this.setToken(null);
+  }
+
+  // Dashboard
+  async getDashboardStats() {
+    return this.request('/dashboard/stats');
+  }
+
+  // Alertas
+  async getAlerts() {
+    return this.request('/alerts');
+  }
+
+  async createAlert(alertData) {
+    return this.request('/alerts', {
+      method: 'POST',
+      body: JSON.stringify(alertData),
+    });
+  }
+
+  async updateAlert(id, alertData) {
+    return this.request(`/alerts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(alertData),
+    });
+  }
+
+  async deleteAlert(id) {
+    return this.request(`/alerts/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Dispositivos
+  async getDevices() {
+    return this.request('/devices');
+  }
+
+  async createDevice(deviceData) {
+    return this.request('/devices', {
+      method: 'POST',
+      body: JSON.stringify(deviceData),
+    });
+  }
+
+  async updateDevice(id, deviceData) {
+    return this.request(`/devices/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(deviceData),
+    });
+  }
+
+  // Usuarios
+  async getUsers() {
+    return this.request('/users');
+  }
+
+  async getUser(id) {
+    return this.request(`/users/${id}`);
+  }
+
+  // Actividades
+  async getActivities() {
+    return this.request('/activities');
   }
 }
 
-// Servicio para vehículos
-export const vehiclesAPI = {
-  // Obtener todos los vehículos
-  getAll: async () => {
-    try {
-      const response = await fetch(`${API_URL}/vehicles`)
-      const data = await response.json()
-      return { success: true, data }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  },
-
-  // Obtener un vehículo por ID
-  getById: async (id) => {
-    try {
-      const response = await fetch(`${API_URL}/vehicles/${id}`)
-      const data = await response.json()
-      return { success: true, data }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  }
-}
-
-// Servicio para alertas
-export const alertsAPI = {
-  // Obtener todas las alertas
-  getAll: async () => {
-    try {
-      const response = await fetch(`${API_URL}/alerts`)
-      const data = await response.json()
-      return { success: true, data }
-    } catch (error) {
-      return { success: false, error: error.message }
-    }
-  }
-}
+export default new ApiService();

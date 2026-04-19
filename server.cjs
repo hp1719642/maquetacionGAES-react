@@ -1,93 +1,115 @@
-// server.js
-const jsonServer = require('json-server')
-const server = jsonServer.create()
-const router = jsonServer.router('db.json')
-const middlewares = jsonServer.defaults()
+// server.cjs
+const jsonServer = require('json-server');
+const server = jsonServer.create();
+const router = jsonServer.router('db.json');
+const middlewares = jsonServer.defaults();
+const cors = require('cors');
 
-server.use(middlewares)
-server.use(jsonServer.bodyParser)
+// Configuración
+const PORT = process.env.PORT || 5000;
 
-// Endpoint de LOGIN
-server.post('/login', (req, res) => {
-  const { email, password } = req.body
-  const db = router.db
-  const user = db.get('users').find(u => u.email === email && u.password === password).value()
+// Middlewares
+server.use(cors());
+server.use(jsonServer.bodyParser);
+server.use(middlewares);
+
+// Autenticación simple
+server.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  // Leer usuarios del db.json
+  const db = router.db;
+  const users = db.get('users').value();
+  
+  const user = users.find(u => u.email === email && u.password === password);
   
   if (user) {
-    const token = Buffer.from(`${user.id}:${Date.now()}`).toString('base64')
+    const { password: _, ...userWithoutPassword } = user;
     res.json({
-      accessToken: token,
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        name: user.name, 
-        role: user.role 
-      }
-    })
+      success: true,
+      user: userWithoutPassword,
+      token: `fake-jwt-token-${user.id}`
+    });
   } else {
-    res.status(401).json({ error: 'Credenciales incorrectas' })
+    res.status(401).json({
+      success: false,
+      message: 'Credenciales inválidas'
+    });
   }
-})
+});
 
-// Endpoint de REGISTRO
-server.post('/register', (req, res) => {
-  const { email, password, name, role } = req.body
-  const db = router.db
-  const existingUser = db.get('users').find(u => u.email === email).value()
+// Registro de usuarios
+server.post('/api/register', (req, res) => {
+  const { name, email, password, role } = req.body;
   
-  if (existingUser) {
-    res.status(400).json({ error: 'El usuario ya existe' })
-  } else {
-    const newUser = { 
-      id: Date.now(), 
-      email, 
-      password, 
-      name, 
-      role: role || 'tecnico' 
-    }
-    db.get('users').push(newUser).write()
-    
-    const token = Buffer.from(`${newUser.id}:${Date.now()}`).toString('base64')
-    res.json({
-      accessToken: token,
-      user: { 
-        id: newUser.id, 
-        email: newUser.email, 
-        name: newUser.name, 
-        role: newUser.role 
-      }
-    })
+  const db = router.db;
+  const users = db.get('users').value();
+  
+  // Verificar si el usuario ya existe
+  if (users.find(u => u.email === email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'El usuario ya existe'
+    });
   }
-})
+  
+  const newUser = {
+    id: Date.now(),
+    name,
+    email,
+    password,
+    role: role || 'user',
+    createdAt: new Date().toISOString()
+  };
+  
+  db.get('users').push(newUser).write();
+  const { password: _, ...userWithoutPassword } = newUser;
+  
+  res.json({
+    success: true,
+    user: userWithoutPassword,
+    token: `fake-jwt-token-${newUser.id}`
+  });
+});
 
-// Middleware de autenticación (opcional)
-server.use((req, res, next) => {
-  const authHeader = req.headers.authorization
-  if (req.method === 'GET' || (authHeader && authHeader.startsWith('Bearer '))) {
-    next()
-  } else if (req.method === 'POST' && (req.path === '/login' || req.path === '/register')) {
-    next()
-  } else {
-    res.status(401).json({ error: 'Se requiere autenticación' })
+// Middleware para verificar autenticación
+server.use('/api/protected', (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token || !token.startsWith('fake-jwt-token-')) {
+    return res.status(401).json({ error: 'No autorizado' });
   }
-})
+  
+  next();
+});
 
-server.use(router)
-server.listen(4000, () => {
-  console.log('')
-  console.log('🚀 ¡Servidor corriendo exitosamente!')
-  console.log('=====================================')
-  console.log('📍 API disponible en: http://localhost:4000')
-  console.log('')
-  console.log('📋 Endpoints disponibles:')
-  console.log('   POST   /login     - Iniciar sesión')
-  console.log('   POST   /register  - Registrar usuario')
-  console.log('   GET    /vehicles  - Listar vehículos')
-  console.log('   GET    /alerts    - Listar alertas')
-  console.log('   GET    /users     - Listar usuarios')
-  console.log('')
-  console.log('🔑 Credenciales de prueba:')
-  console.log('   Admin:    admin@flota.com / admin123')
-  console.log('   Técnico:  tecnico@flota.com / tec123')
-  console.log('')
-})
+// Rutas protegidas de ejemplo
+server.get('/api/protected/alerts', (req, res) => {
+  const db = router.db;
+  const alerts = db.get('alerts').value();
+  res.json(alerts);
+});
+
+// Dashboard stats
+server.get('/api/dashboard/stats', (req, res) => {
+  const db = router.db;
+  
+  const stats = {
+    totalAlerts: db.get('alerts').value().length,
+    activeAlerts: db.get('alerts').filter(a => a.status === 'active').value().length,
+    resolvedAlerts: db.get('alerts').filter(a => a.status === 'resolved').value().length,
+    totalUsers: db.get('users').value().length,
+    activeDevices: db.get('devices').filter(d => d.status === 'active').value().length,
+    recentActivity: db.get('activities').take(5).value()
+  };
+  
+  res.json(stats);
+});
+
+// Usar el router de json-server para el resto de endpoints
+server.use('/api', router);
+
+server.listen(PORT, () => {
+  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  console.log(`📦 JSON Server API available at http://localhost:${PORT}/api`);
+});
